@@ -58,6 +58,8 @@ def _json_value(v: Any) -> Any:
         return v
     if isinstance(v, Decimal):
         return float(v)
+    if isinstance(v, dt.datetime) and v.time() == dt.time() and v.tzinfo is None:
+        return v.date().isoformat()  # date_trunc results read as dates: 2017-11-01, not 2017-11-01T00:00:00
     if isinstance(v, (dt.date, dt.datetime, dt.time)):
         return v.isoformat()
     if isinstance(v, dt.timedelta):

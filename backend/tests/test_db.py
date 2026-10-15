@@ -54,3 +54,49 @@ def test_error_signature_ignores_identifiers():
             run(f"select {col} from pg_class")
         sigs.add(e.value.signature)
     assert sigs == {"42703:column ? does not exist"}
+
+
+VECTORS = {
+    "test: how many orders": [1.0, 0.0, 0.0],
+    "test: how many orders are there?": [1.0, 0.1, 0.0],  # paraphrase, cosine 0.995
+    "test: how many orders were delivered": [1.0, 0.8, 0.0],  # related, cosine 0.78
+    "test: profit margin": [0.0, 0.0, 1.0],  # unrelated
+}
+
+
+async def fake_embed(text: str) -> list[float]:
+    return VECTORS[text]
+
+
+def test_memory_merges_near_duplicates_retrieves_similar_and_survives_restart():
+    from fixpoint.db import init_app_schema
+    from fixpoint.memory import VectorMemory
+
+    async def go():
+        pool = make_pool(URL or "")
+        await pool.open()
+        try:
+            await init_app_schema(pool)
+            async with pool.connection() as conn:
+                await conn.execute("DELETE FROM app.verified_queries WHERE question LIKE 'test: %'")
+            memory = VectorMemory(pool, fake_embed)
+            await memory.load()
+            assert await memory.add("test: how many orders", "SELECT count(*) FROM orders", "seed") == "added"
+            assert await memory.add("test: how many orders are there?", "SELECT 1", "live") == "merged"
+
+            restarted = VectorMemory(pool, fake_embed)
+            await restarted.load()
+            hits = await restarted.search("test: how many orders were delivered")
+            assert [(m.question, m.score) for m in hits] == [("test: how many orders", 0.781)]
+            assert await restarted.search("test: profit margin") == []
+
+            async with pool.connection() as conn:
+                cur = await conn.execute(
+                    "SELECT tables, uses, source FROM app.verified_queries WHERE question LIKE 'test: %'"
+                )
+                assert await cur.fetchall() == [(["orders"], 1, "seed")]
+                await conn.execute("DELETE FROM app.verified_queries WHERE question LIKE 'test: %'")
+        finally:
+            await pool.close()
+
+    asyncio.run(go())
