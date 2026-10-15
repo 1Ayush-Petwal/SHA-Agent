@@ -1,2 +1,8 @@
 .scratch/issues/
 __pycache__/
+
+.env
+data/raw/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -1,0 +1,47 @@
+[project]
+name = "fixpoint"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Ayush Petwal", email = "144988170+upvaluetech@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "faiss-cpu>=1.15.1",
+    "fastapi>=0.143.2",
+    "langchain-google-genai>=4.4.2",
+    "langfuse>=5.0.1",
+    "langgraph>=1.2.15",
+    "numpy>=2.5.4",
+    "psycopg[binary,pool]>=3.3.6",
+    "pydantic>=2.14.1",
+    "python-dotenv>=1.2.4",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+fixpoint = "fixpoint.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+    "types-pyyaml>=6.0.12.20260906",
+]
+
+[tool.pytest.ini_options]
+markers = ["db: needs a real Postgres at TEST_DATABASE_URL"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
