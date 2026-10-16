@@ -22,15 +22,15 @@ class Gemini:
     def __init__(self) -> None:
         self.models = {  # keyed by (strong, think)
             (False, True): (
-                ChatGoogleGenerativeAI(model=settings.fast_model, max_retries=2, timeout=60),
+                ChatGoogleGenerativeAI(model=settings.fast_model, max_retries=6, timeout=60),
                 settings.fast_price,
             ),
             (False, False): (
-                ChatGoogleGenerativeAI(model=settings.fast_model, max_retries=2, timeout=60, thinking_level="low"),
+                ChatGoogleGenerativeAI(model=settings.fast_model, max_retries=6, timeout=60, thinking_level="low"),
                 settings.fast_price,
             ),
             (True, True): (
-                ChatGoogleGenerativeAI(model=settings.strong_model, max_retries=2, timeout=90),
+                ChatGoogleGenerativeAI(model=settings.strong_model, max_retries=6, timeout=90),
                 settings.strong_price,
             ),
         }
