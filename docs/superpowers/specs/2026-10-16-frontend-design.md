@@ -4,7 +4,7 @@ Date: 2026-10-16. Parent PRD: GitHub issue #1 (Frontend, API and Testing section
 
 ## Goal
 
-A Next.js frontend for Fixpoint (Chat and Evals pages) that is built and checked while the backend API is still in progress, and that works against the real API by setting one env var, with no rewrite.
+A Next.js frontend for Fixpoint (Landing, Chat and Evals pages) that is built and checked while the backend API is still in progress, and that works against the real API by setting one env var, with no rewrite.
 
 ## Decisions
 
@@ -12,7 +12,31 @@ A Next.js frontend for Fixpoint (Chat and Evals pages) that is built and checked
 - **Mock mode.** `lib/api.ts` uses `NEXT_PUBLIC_API_URL`, and falls back to `/api/mock` when it is unset. The mock is a set of Next route handlers under `app/api/mock/` that emit real SSE (`/ask`) and JSON (evals, memory), so the production fetch and SSE parsing path is exercised from day one. To remove the mock, delete that folder.
 - Types in `lib/types.ts` are maintained by hand (PRD decision). Chat types mirror `backend/src/fixpoint/agent.py` (`StepEvent`, `Answer`, `Chart`, `Memory`). Eval types follow the contract below, which the backend will match.
 - Admin token is stored in localStorage and sent as the `X-Admin-Token` header. A header control enters or clears it. Admin-only controls render only when it is set (the server still enforces it).
-- Visual: shadcn neutral theme, light and dark following the system, monospace SQL. Single column on mobile; wide tables scroll inside their card, never the page.
+- Routes: `/` landing, `/ask` chat, `/evals`, `/evals/[id]`.
+
+## Visual language
+
+Borrowed from Café De (`~/Desktop/RazorPay/cafe-de-agent/apps/web`, `src/styles.css` and `LandingPage.tsx`), re-tinted so Fixpoint reads as its own product:
+
+- Same structure:
+  - a 960px app shell with a sticky top nav, with an underline on the active link
+  - a full-bleed landing page with its own header
+  - a tight heading scale (h1 1.6rem/650/-0.02em in the app, big bold hero on the landing)
+  - system-ui text, monospace for SQL and numbers
+  - uppercase letter-spaced eyebrow labels
+  - white cards with a 1px border and a soft shadow; radius 10px for cards, 6px for controls, pill for chips
+  - mock "app window" frames with three dots on the landing
+  - a 2px focus-visible ring
+  - tabular numbers
+  - reduced-motion respected
+- Chat bubbles follow Café De's agent chat: the user's question is a filled primary bubble on the right; agent steps are bordered elevated rows with check marks; outcomes sit in tinted panels (success green for verified, gold/amber notice for warnings, danger for errors).
+- Own tint, as tokens on `:root`:
+  - Day: background `#f6f7f5`, elevated `#ffffff`, text `#14201e`, muted `#55625f`, border `#dde2df`, primary deep teal `#0f5c56` with white contrast, panel `#fdf3dd` / `#d8b56b` (kept from Café De for notices)
+  - Night: background `#0e1514`, elevated `#162120`, text `#e6efec`, muted `#9fb0ab`, border `#2a3836`, primary `#3fb8a9` with `#06201d` contrast
+  - Success, danger and amber are tuned per theme. Chart series use primary plus 3 muted companions.
+- Theme: day or night from the local clock (06:00-17:00 is day) with a toggle override saved in localStorage, as in Café De. The theme is set before paint by an inline script, so the page never flashes the wrong one.
+- Stack: Tailwind and shadcn/ui (PRD decision). shadcn's CSS variables are mapped onto the tokens above (`--background`, `--card`, `--primary`, `--border`, `--radius: 10px`, etc.), so shadcn components render in this language rather than the default neutral. Only the components actually used are added.
+- Responsive: single column on mobile; wide tables scroll inside their card, never the page.
 
 ## API contract
 
@@ -32,7 +56,25 @@ Eval and memory endpoints (proposed here; the backend will implement them to mat
 - `POST /evals/runs {split, memory}` (admin) returns 202 `{id}`, or 409 when a run is already in progress.
 - `POST /memory {question, sql}` (admin) returns `{status: "inserted"|"merged"}`.
 
-## Chat page
+## Landing page (`/`)
+
+Full-bleed, modelled on Café De's landing. Every claim must be backed by something the app ships.
+
+- Header: brand, section links (How it heals, Evals, FAQ), theme toggle, and an "Ask a question" button.
+- Hero:
+  - a pill announcement
+  - a two-line headline ("Ask your warehouse anything." / "Get an answer that checked itself.")
+  - a one-paragraph subhead
+  - primary CTA "Ask a question" (to `/ask`) and secondary "See the evals" (to `/evals`)
+  - three check-mark claims (shows its SQL, repairs its own mistakes, never a silent guess)
+- A mock app window showing one canned turn: the question bubble, the step timeline with one failed check and a repair, and an answer card with a mini bar chart. Static markup, not the live components.
+- "How it heals": 3 numbered cards (plans and writes SQL; verifies the result against traps such as fan-out duplicates, impossible values and partial months; repairs up to 3 times, then says what it tried).
+- The traps it catches: a short list of the real Olist traps from the data dictionary.
+- Proof stats: first-try accuracy, final accuracy, cost per correct answer and p50 latency from the latest done eval run (`GET /evals/runs`), each with its n. The section is hidden when there is no done run; numbers are never hard-coded.
+- FAQ (which data, is it read-only, what happens when it can't answer, what the evals measure) and a footer.
+- Scroll reveal as in Café De, off under reduced motion.
+
+## Chat page (`/ask`)
 
 - A session-only list of turns, each a question, its live steps and its answer. Nothing is persisted.
 - An empty state with example questions (taken from the golden set wording) that run when clicked.
@@ -82,7 +124,7 @@ The mock covers every UI state:
 
 - `tsc --noEmit`, `next lint` (or eslint), and `next build` must pass.
 - `lib/sse.test.ts`, run by Node's built-in test runner (`node --test`, native TS type stripping, no new dependency). It covers events split across chunks, multiple events in one chunk, a trailing partial event and an `error` event.
-- E2E by hand in a real browser in mock mode at 1280 px and 390 px widths, through every chat variant and both eval pages.
+- E2E by hand in a real browser in mock mode at 1280 px and 390 px widths, in both day and night themes, through the landing, every chat variant and both eval pages. Side-by-side visual comparison against Café De screenshots for spacing, type and card treatment.
 
 ## Out of scope
 
