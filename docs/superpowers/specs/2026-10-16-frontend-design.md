@@ -35,7 +35,7 @@ Borrowed from Café De (`~/Desktop/RazorPay/cafe-de-agent/apps/web`, `src/styles
   - Night: background `#0e1514`, elevated `#162120`, text `#e6efec`, muted `#9fb0ab`, border `#2a3836`, primary `#3fb8a9` with `#06201d` contrast
   - Success, danger and amber are tuned per theme. Chart series use primary plus 3 muted companions.
 - Theme: day or night from the local clock (06:00-17:00 is day) with a toggle override saved in localStorage, as in Café De. The theme is set before paint by an inline script, so the page never flashes the wrong one.
-- Stack: Tailwind and shadcn/ui (PRD decision). shadcn's CSS variables are mapped onto the tokens above (`--background`, `--card`, `--primary`, `--border`, `--radius: 10px`, etc.), so shadcn components render in this language rather than the default neutral. Only the components actually used are added.
+- Stack: Tailwind and shadcn/ui (PRD decision). shadcn's CSS variables are mapped onto the tokens above (`--background`, `--card`, `--primary`, `--border`, `--radius: 10px`, etc.), so shadcn components render in this language rather than the default neutral. Only the components actually used are added (button, badge, card, dialog, input, switch, chart). Disclosures (SQL, step detail, memories, FAQ) are native `<details>`; choices (eval split, chart metric) are pill toggles as in Café De.
 - Responsive: single column on mobile; wide tables scroll inside their card, never the page.
 
 ## API contract
@@ -45,12 +45,14 @@ Borrowed from Café De (`~/Desktop/RazorPay/cafe-de-agent/apps/web`, `src/styles
 - `step`: `{type, node, attempt, summary, detail}`. `node` is one of planner, coder, executor, verifier, debugger, explainer.
 - `answer` (once): `{type, kind, text, sql, columns, rows, truncated, chart{type,x,y}, warnings, memories_used[{question,sql,score}], options, refusal_reason, closest_question, verified, attempts, cost_usd, trace_url}`
 - `error`: `{type, message}`
-- HTTP 429 before the stream: `{detail, retry_after_s?}`
+- HTTP 429 before the stream: `{detail, retry_after_s?}` (or a `Retry-After` header)
+- Postgres numerics may arrive as JSON strings (Pydantic serializes `Decimal` that way); the UI treats numeric strings as numbers.
+- Contract gap for the backend: `Answer` has no total row count, so when exactly 500 rows arrive untruncated the UI can only say "showing the first 500 rows". Adding `row_count` to `Answer` would fix it.
 
 Eval and memory endpoints (proposed here; the backend will implement them to match):
 
 - `GET /evals/runs` returns `EvalRun[]`, newest first:
-  `id, status ("running"|"done"|"failed"), started_at, finished_at|null, git_sha, model, split ("train"|"test"|"all"), memory (bool), n, n_answerable, first_try_acc, final_acc, repair_uplift, repair_regressions, confidently_wrong, clarification_f1, refusal_acc, cost_per_correct, p50_ms, p95_ms`. Accuracies are 0..1; any metric may be null while a run is running.
+  `id (int), status ("running"|"done"|"failed"), started_at, finished_at|null, git_sha, model, split ("train"|"test"|"all"), memory (bool), n, n_answerable, n_ambiguous, n_unanswerable, first_try_acc, final_acc, repair_uplift, repair_regressions, confidently_wrong, clarification_f1, refusal_acc, cost_per_correct, p50_ms, p95_ms`. Accuracies are 0..1; any metric may be null while a run is running.
 - `GET /evals/runs/{id}` returns `{run: EvalRun, results: EvalResult[]}`, where each `EvalResult` is
   `question_id, question, kind (gold label), predicted_kind, first_try_correct, final_correct, verified, attempts, cost_usd, latency_ms, gold_sql, agent_sql, trace_url|null`
 - `POST /evals/runs {split, memory}` (admin) returns 202 `{id}`, or 409 when a run is already in progress.
@@ -76,6 +78,7 @@ Full-bleed, modelled on Café De's landing. Every claim must be backed by someth
 
 ## Chat page (`/ask`)
 
+- `/ask?q=<question>` asks that question on arrival, so a question can be linked to. `?theme=day|night` on any page overrides the theme (demo links, screenshots).
 - A session-only list of turns, each a question, its live steps and its answer. Nothing is persisted.
 - An empty state with example questions (taken from the golden set wording) that run when clicked.
 - Step timeline: steps are grouped by attempt. Each shows its node, the summary, and the detail (SQL, failure) in an expandable block. A repair (debugger) or a replan (planner after attempt 1) is visually distinct.
@@ -118,6 +121,7 @@ The mock covers every UI state:
   - truncated
   - an `error` event
   - a 429
+- Mock-only triggers for states no example question reaches: questions containing `mock replan`, `mock unverified`, `mock truncated`, `mock error`, `mock drop` (stream closes with no answer) or `mock 429`. The admin token `wrong` is rejected by the mock. The nav shows a "Mock data" pill whenever the mock is in use.
 - Evals mock: one done memory-on run, one done memory-off run, one failed run, and a POST that creates a running run which completes after ~15 s. The detail view includes confidently-wrong and regression rows.
 
 ## Testing
