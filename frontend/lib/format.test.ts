@@ -39,6 +39,7 @@ test("metric formatters show n and never invent a number for null", () => {
   assert.equal(pts(-0.1), "-10 pts");
   assert.equal(f1(0.8333, 5), "0.83 (n=5)");
   assert.equal(usd(0.0021), "$0.0021");
+  assert.equal(usd(0.0125), "$0.0125");
   assert.equal(usd(1.5), "$1.50");
   assert.equal(seconds(12345), "12.3 s");
   assert.equal(seconds(null), "-");

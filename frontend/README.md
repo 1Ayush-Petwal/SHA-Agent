@@ -10,6 +10,13 @@ Next.js 16 app: landing (`/`), chat (`/ask`), evals (`/evals`, `/evals/[id]`).
 `NEXT_PUBLIC_API_URL` points at the Fixpoint API (no trailing slash). Leave it unset to use the built-in mock at
 `/api/mock`; the nav then shows a "Mock data" pill.
 
+Against the real API (needs `backend/.env`: `DATABASE_URL`, `GOOGLE_API_KEY`, `ADMIN_TOKEN`, optional Langfuse keys):
+
+    cd ../backend && uv run uvicorn fixpoint.api:app --port 8000 --proxy-headers
+    NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm dev
+
+The API only accepts browser requests from `CORS_ORIGINS` (default `http://localhost:3000`, comma-separated).
+
 ## Mock triggers
 
 The example questions on `/ask` each reach a different answer type. Questions containing `mock replan`,

@@ -41,7 +41,8 @@ export const pts = (x: number | null | undefined) =>
 export const f1 = (x: number | null | undefined, n?: number) => (x == null ? "-" : `${x.toFixed(2)}${sample(n)}`);
 
 export const usd = (x: number | null | undefined) =>
-  x == null ? "-" : x < 0.01 ? `$${x.toFixed(4)}` : `$${x.toFixed(2)}`;
+  // Per-question costs sit around a cent; under 10 cents keep 4 decimals so a column of them stays comparable.
+  x == null ? "-" : x < 0.1 ? `$${x.toFixed(4)}` : `$${x.toFixed(2)}`;
 
 export const seconds = (ms: number | null | undefined) => (ms == null ? "-" : `${(ms / 1000).toFixed(1)} s`);
 

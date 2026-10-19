@@ -81,7 +81,7 @@ def test_memory_merges_near_duplicates_retrieves_similar_and_survives_restart():
                 await conn.execute("DELETE FROM app.verified_queries WHERE question LIKE 'test: %'")
             memory = VectorMemory(pool, fake_embed)
             await memory.load()
-            assert await memory.add("test: how many orders", "SELECT count(*) FROM orders", "seed") == "added"
+            assert await memory.add("test: how many orders", "SELECT count(*) FROM orders", "seed") == "inserted"
             assert await memory.add("test: how many orders are there?", "SELECT 1", "live") == "merged"
 
             restarted = VectorMemory(pool, fake_embed)

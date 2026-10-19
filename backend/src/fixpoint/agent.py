@@ -348,7 +348,11 @@ Question: {s["question"]}{retry}"""
             result = await self.run_sql(s["sql"])
         except SQLError as e:
             return {"result": None, **self.fail(s, e.signature, e.message)}
-        update: State = {"result": result, "failure": None, "step": (f"{len(result.rows)} rows", "")}
+        update: State = {
+            "result": result,
+            "failure": None,
+            "step": (f"{len(result.rows)} row{'' if len(result.rows) == 1 else 's'}", ""),
+        }
         if s["attempt"] == 1:
             update["first_try"] = result
         return update

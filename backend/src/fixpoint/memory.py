@@ -70,7 +70,7 @@ class VectorMemory:
         hits = [(s, i) for s, i in self._nearest(v, TOP_K) if s >= FLOOR]
         return [Memory(question=self.items[i][1], sql=self.items[i][2], score=round(s, 3)) for s, i in hits]
 
-    async def add(self, question: str, sql: str, source: Literal["seed", "live"]) -> Literal["added", "merged"]:
+    async def add(self, question: str, sql: str, source: Literal["seed", "live"]) -> Literal["inserted", "merged"]:
         """Store a verified answer, or count a use of the near-duplicate already stored."""
         embedding = await self.embed(question)
         v = _unit(embedding)
@@ -89,4 +89,4 @@ class VectorMemory:
             row = await cur.fetchone()
         assert row is not None
         self._append(row[0], question, sql, v)
-        return "added"
+        return "inserted"

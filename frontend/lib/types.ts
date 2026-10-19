@@ -85,7 +85,8 @@ export interface EvalResult {
   question_id: string;
   question: string;
   kind: Kind;
-  predicted_kind: Kind;
+  /** null when the agent crashed on the question. */
+  predicted_kind: Kind | null;
   first_try_correct: boolean;
   final_correct: boolean;
   verified: boolean;

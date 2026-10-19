@@ -61,7 +61,7 @@ function SqlCompare({ result }: { result: EvalResult }) {
   if (result.kind !== "answerable") {
     return (
       <p className="py-1 text-sm">
-        Expected <strong>{result.kind}</strong>; the planner said <strong>{result.predicted_kind}</strong>.
+        Expected <strong>{result.kind}</strong>; the planner said <strong>{result.predicted_kind ?? "nothing (the run crashed)"}</strong>.
       </p>
     );
   }
@@ -143,7 +143,7 @@ function ResultsTable({ results }: { results: EvalResult[] }) {
                     <td className="whitespace-nowrap">
                       {r.kind}
                       {r.predicted_kind !== r.kind && (
-                        <span className="block text-xs text-danger-foreground">said {r.predicted_kind}</span>
+                        <span className="block text-xs text-danger-foreground">said {r.predicted_kind ?? "nothing"}</span>
                       )}
                     </td>
                     <td>
