@@ -18,7 +18,13 @@ export function formatCell(v: Cell, column = ""): string {
   const n = toNumber(v);
   const code = typeof v === "string" && /^-?0\d/.test(v);
   if (n !== null && !code) {
-    return n.toLocaleString("en-US", { maximumFractionDigits: 2, useGrouping: !UNGROUPED.test(column) });
+    // A numeric string keeps its scale (Postgres sends "9.90"), so money columns line up.
+    const scale = typeof v === "string" ? Math.min(v.split(".")[1]?.length ?? 0, 2) : 0;
+    return n.toLocaleString("en-US", {
+      minimumFractionDigits: scale,
+      maximumFractionDigits: 2,
+      useGrouping: !UNGROUPED.test(column),
+    });
   }
   if (typeof v === "string") return MIDNIGHT.exec(v)?.[1] ?? v;
   return String(v);

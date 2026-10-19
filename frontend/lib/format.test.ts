@@ -25,6 +25,13 @@ test("formatCell keeps the table readable and honest", () => {
   assert.equal(formatCell("credit_card"), "credit_card");
 });
 
+test("formatCell keeps a numeric string's decimal places (up to 2), so a money column lines up", () => {
+  assert.equal(formatCell("9.90"), "9.90");
+  assert.equal(formatCell("13440.00"), "13,440.00");
+  assert.equal(formatCell("4.5"), "4.5");
+  assert.equal(formatCell(9.9), "9.9");
+});
+
 test("metric formatters show n and never invent a number for null", () => {
   assert.equal(pct(0.7, 10), "70% (n=10)");
   assert.equal(pct(null, 10), "-");

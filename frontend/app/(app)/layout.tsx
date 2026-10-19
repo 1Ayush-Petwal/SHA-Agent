@@ -10,7 +10,7 @@ const STATIC_LINKS = (
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-[960px] px-4 pb-12 sm:px-6">
+    <div className="mx-auto flex min-h-dvh max-w-[960px] flex-col px-4 pb-12 sm:px-6">
       {/* usePathname is request data on dynamic routes, so it needs a Suspense boundary under cacheComponents. */}
       <SiteNav
         links={
@@ -19,7 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Suspense>
         }
       />
-      <main>{children}</main>
+      <main className="flex flex-1 flex-col">{children}</main>
     </div>
   );
 }
