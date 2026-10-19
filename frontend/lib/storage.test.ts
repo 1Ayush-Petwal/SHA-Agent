@@ -36,3 +36,9 @@ test("a throwing or missing storage reads as empty and never throws", () => {
   assert.doesNotThrow(() => writeStored("k", "v", throwing));
   assert.equal(readStored("k", undefined), null);
 });
+
+test("writeStored reports whether the value was persisted, so callers can keep it in memory instead", () => {
+  assert.equal(writeStored("k", "v", memory()), true);
+  assert.equal(writeStored("k", "v", throwing), false);
+  assert.equal(writeStored("k", "v", undefined), false);
+});
