@@ -96,7 +96,8 @@ function ResultsTable({ results }: { results: EvalResult[] }) {
   return (
     <section className="flex flex-col gap-3">
       <h2>Per question</h2>
-      <div className="overflow-x-auto rounded-lg border bg-card shadow-soft">
+      {/* relative: the sr-only labels are absolutely positioned and would otherwise escape the scroll box. */}
+      <div className="relative overflow-x-auto rounded-lg border bg-card shadow-soft">
         <table className="data-table min-w-[860px]">
           <thead>
             <tr>
